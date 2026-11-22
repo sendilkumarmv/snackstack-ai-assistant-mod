@@ -1,0 +1,1 @@
+"""SnackStack application package."""
