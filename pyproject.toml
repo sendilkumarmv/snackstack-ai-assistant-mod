@@ -20,6 +20,7 @@ dependencies = [
 [project.scripts]
 snackstack = "snackstack.main:main"
 test="snackstack.test:run"
+testorch="snackstack.test:test_orchestrator"
 
 [build-system]
 requires = ["setuptools>=68.0"]

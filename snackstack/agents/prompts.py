@@ -13,13 +13,11 @@ AGENTS AVAILABLE:
 - menu_agent → menu discovery, dish recommendations, dietary queries, general conversation
 
 RULES:
-- If the query is a greeting or general chat (hi, hello, hey, thanks, etc.) → route to [menu_agent]
-- If the query is ONLY about food/menu → route to [menu_agent]
-- Use conversation history to understand vague follow-ups. E.g. if the customer
-  previously asked about non-veg and now says "anything works", that's still a
-  menu query — route to [menu_agent].
-- When in doubt, default to [menu_agent]
-- If the query is NOT about food/menu then mention that you can answer only about snackstack menus
+- If the query is a greeting, general chat, or food/menu-related,
+  route to ["menu_agent"].
+- If the query is unrelated to food or SnackStack menus,
+  route to [] and explain in the reasoning that no agent should be dispatched.
+- When in doubt, route to ["menu_agent"]. menus
 """
 
 ORCHESTRATOR_PROMPT = """\
