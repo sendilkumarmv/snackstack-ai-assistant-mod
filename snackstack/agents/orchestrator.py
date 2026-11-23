@@ -11,7 +11,8 @@ from langgraph.graph import END
 from snackstack.config import llm
 from snackstack.logger import setup_logger
 from snackstack.state import StackState
-from snackstack.agents.prompts import ORCHESTRATOR_PROMPT_A 
+from snackstack.agents.prompts import ORCHESTRATOR_PROMPT_A
+from snackstack.agents.decision_schema import OrchestratorDecisionSchema
 
 
 logger=setup_logger('snackstack:orchestrator')
@@ -25,7 +26,6 @@ class OrchestratorDecision(BaseModel):
     )
 
 routing_llm = llm.with_structured_output(OrchestratorDecision)
-
 def orchestrator_node(state: StackState)->Command[Literal["menu_agent_node"]]:
     """Classify the query and fan out to menu_agent or end."""
 
@@ -40,6 +40,7 @@ def orchestrator_node(state: StackState)->Command[Literal["menu_agent_node"]]:
         *history,
         HumanMessage(content=query),
     ])
+
     logger.info("Agents: %s | Reason: %s", decision.agents, decision.reasoning)
 
     if not decision.agents:
@@ -65,6 +66,53 @@ def orchestrator_node(state: StackState)->Command[Literal["menu_agent_node"]]:
 
     sends = [Send(f"{agent}_node", clean_state) for agent in decision.agents]
     return Command(
-        goto=sends, update={
-        "route": decision.agents
-    })
+            goto=sends, update={
+            "route": decision.agents
+        })
+   
+
+routing_llm_by_schema = llm.with_structured_output(OrchestratorDecisionSchema)
+def orchestrator_node_schema(state: StackState)->Command[Literal["menu_agent_node"]]:
+    """Classify the query and fan out to menu_agent or end."""
+
+    query = state["user_query"]
+    logger.info("Routing query: %s", query[:60])
+
+    # Conversation history is persisted via MemorySaver — just use it
+    history = state.get("messages", [])[-6:]
+   
+    decision = routing_llm_by_schema.invoke([
+        SystemMessage(content=ORCHESTRATOR_PROMPT_A),
+        *history,
+        HumanMessage(content=query),
+    ])
+
+    logger.info("Agents: %s | Reason: %s", decision["agents"], decision["reasoning"])
+
+    if not decision["agents"]:
+        return Command(
+            goto=END,
+            update={
+                "route": [],
+                "final_answer": (
+                    "I can only help with SnackStack menu and "
+                    "food-related questions."
+                ),
+            },
+        )
+
+    # Reset per-turn buffers BEFORE sending to agents
+    clean_state = {
+        **state,
+        "menu_messages": [],
+        "order_messages": [],
+        "menu_response": "",
+        "order_response": "",
+    }
+
+    sends = [Send(f"{agent}_noode", clean_state) for agent in decision["agents"]]
+    return Command(
+            goto=sends, update={
+            "route": decision["agents"]
+        })
+    
