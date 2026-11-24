@@ -7,3 +7,6 @@ Uses LangGraph conditional edges instead of a manual tool-calling loop.
 - should_continue_menu → conditional edge: tool calls? → tools : → synthesizer
 """
 
+
+def menu_agent_node():
+    pass
