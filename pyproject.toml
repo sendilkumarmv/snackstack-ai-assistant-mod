@@ -22,6 +22,7 @@ snackstack = "snackstack.main:main"
 test="snackstack.test:run"
 testorch="snackstack.test:test_orchestrator"
 testorchs="snackstack.test:test_orchestrator_schema"
+testmnutool="snackstack.test:test_tool_search_menu_catalog"
 
 [build-system]
 requires = ["setuptools>=68.0"]
