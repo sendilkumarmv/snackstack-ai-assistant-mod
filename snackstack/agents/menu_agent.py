@@ -9,6 +9,7 @@ Uses LangGraph conditional edges instead of a manual tool-calling loop.
 
 from langchain.messages import HumanMessage, SystemMessage
 
+from snackstack.agents.prompts import MENU_AGENT_PROMPT
 from snackstack.config import llm
 from snackstack.logger import setup_logger
 from snackstack.state import StackState
@@ -16,10 +17,8 @@ from snackstack.tools.menu_tool import menu_tools_list
 
 
 logger = setup_logger("snackstack.menu_agent")
-
 # tools
 menu_llm = llm.bind_tools(menu_tools_list)
-
 # For each tool in menu_tools_llist an entry in dict with 
 # key=toolName and value is tool
 tool_map = {t.name: t for t in menu_tools_list }
@@ -37,9 +36,9 @@ def menu_agent_node(state: StackState):
         logger.info("Processing menu query...")
         history = state.get("messages", [])[-6:]
         all_message = [
-            SystemMessage(),
+            SystemMessage(content=MENU_AGENT_PROMPT),
             *history,
-            HumanMessage()
+            HumanMessage(content=state["user_query"])
         ]
     else:
         # Subsequent call — tool results already in menu_messages
