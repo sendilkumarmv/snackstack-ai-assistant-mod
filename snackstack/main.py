@@ -13,6 +13,8 @@ import uuid
 
 from snackstack.graph import build_graph
 from snackstack.logger import setup_logger
+from langchain.messages import HumanMessage
+from langgraph.types import Command
 
 logger = setup_logger("snackstack.main")
 
@@ -28,6 +30,45 @@ class SnackStackAssistant:
     def _config(self):
         return {"configurable": {"thread_id": self.thread_id}}
 
+    def ask(self, query: str, voice_input: bool = False) -> str:
+        """Send a query through the graph, handling any HITL interrupts."""
+
+        result = self.graph.invoke(
+            {"messages": [HumanMessage(content=query)], "user_query": query},
+            self._config,
+        )
+
+        # Check for HITL interrupts (e.g. order agent asking for an ID)
+        snapshot = self.graph.get_state(self._config)
+        for task in snapshot.tasks:
+            if not getattr(task, "interrupts", None):
+                continue
+            for intr in task.interrupts:
+                prompt = intr.value
+
+                # Speak the interrupt prompt if voice is enabled
+                if self.speaker:
+                    self.speaker.speak(prompt)
+
+                # Collect user response via mic or keyboard
+                if voice_input:
+                    logger.info("Listening for HITL response...")
+                    _, user_input = self.recorder.record_and_transcribe(5)
+                    user_input = user_input.strip() if user_input else "unknown"
+                else:
+                    user_input = input(f"\n{prompt}\nYou > ").strip() or "unknown"
+
+                logger.info("Resuming with: %s", user_input)
+
+            # Resume the graph with the user's answer
+            result = self.graph.invoke(Command(resume=user_input), self._config)
+
+        answer = result.get("final_answer", "Sorry, I could not process your request.")
+
+        # if self.speaker:
+        #     self.speaker.speak(answer)
+
+        return answer
 
 
 def run_text_loop(assistant: SnackStackAssistant):

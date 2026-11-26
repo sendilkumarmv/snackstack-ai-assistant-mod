@@ -55,8 +55,9 @@ def build_graph():
         should_continue_menu,
         {"menu_tools_node": "menu_tools_node", "synthesizer_node": "synthesizer_node"}
     )
+    graph_builder.add_edge("menu_tools_node", "menu_agent_node")
 
-    graph_builder.add_edge("synthezier_node", END)
+    graph_builder.add_edge("synthesizer_node", END)
 
 
     memory = MemorySaver()
