@@ -7,7 +7,7 @@ Uses LangGraph conditional edges instead of a manual tool-calling loop.
 - should_continue_menu → conditional edge: tool calls? → tools : → synthesizer
 """
 
-from langchain.messages import HumanMessage, SystemMessage
+from langchain.messages import HumanMessage, SystemMessage, ToolMessage
 
 from snackstack.agents.prompts import MENU_AGENT_PROMPT
 from snackstack.config import llm
@@ -60,8 +60,28 @@ def menu_agent_node(state: StackState):
     return update
 
 
-def menu_tool_node():
-    pass
+def menu_tools_node(state: StackState) -> dict:
+    """Execute tool calls from the last AI message in menu_messages."""
 
-def should_continue_menu():
-    pass
+    all_msgs = list(state["menu_messages"])
+    last_msg = all_msgs[-1]
+    tool_names = [tc["name"] for tc in last_msg.tool_calls]
+    logger.info("Executing tools: %s", tool_names)
+
+    for tc in last_msg.tool_calls:
+        result = tool_map[tc["name"]].invoke(tc["args"])
+        all_msgs.append(
+            ToolMessage(content=str(result), tool_call_id=tc["id"])
+        )
+
+    return {"menu_messages": all_msgs}
+
+
+def should_continue_menu(state: StackState) -> str:
+    """Conditional edge: route to tools or synthesizer."""
+    menu_msgs = state.get("menu_messages") or []
+    if menu_msgs:
+        last = menu_msgs[-1]
+        if getattr(last, "tool_calls", None):
+            return "menu_tools_node"
+    return "synthesizer_node"

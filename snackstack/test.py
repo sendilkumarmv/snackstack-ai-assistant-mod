@@ -79,3 +79,7 @@ def test_menu_agent_node():
         }
     response = menu_agent_node(state=state)
     print(response)
+
+    state["user_query"] = "Bangalore weather"
+    response = menu_agent_node(state=state)
+    print(response)
