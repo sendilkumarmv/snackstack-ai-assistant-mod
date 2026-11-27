@@ -1,9 +1,14 @@
+from langchain.messages import SystemMessage
+
 from snackstack.state import StackState
 from snackstack.tools.menu_tool import search_menu_catalog
 from snackstack.tools.orders_tool import get_order_status
 from snackstack.agents.orchestrator import orchestrator_node, orchestrator_node_schema
+from snackstack.tools.menu_tool import search_menu_catalog
 
 from langchain_core.messages import HumanMessage
+from snackstack.agents.prompts import MENU_AGENT_PROMPT
+from snackstack.agents.menu_agent import menu_agent_node
 
 
 def run():
@@ -56,3 +61,25 @@ def test_orchestrator_schema():
     print(command)
     print("Route:", command.update['route'])
     print("Goto:", command.goto)
+
+def test_tool_search_menu_catalog():
+    response = search_menu_catalog.invoke({"query": "Chicken dishes"})
+    print(response)
+
+def test_menu_agent_node():
+    state: StackState = {
+            "messages": [HumanMessage(content="Hello")],
+            "user_query": "Recommend something vegetarian",
+            "route": [],
+            "menu_messages": [],
+            "order_messages": [],
+            "menu_response": "",
+            "order_response": "",
+            "final_answer": "",
+        }
+    response = menu_agent_node(state=state)
+    print(response)
+
+    state["user_query"] = "Bangalore weather"
+    response = menu_agent_node(state=state)
+    print(response)
