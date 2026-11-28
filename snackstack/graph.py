@@ -49,7 +49,7 @@ def build_graph():
     graph_builder.add_node("menu_agent_node", menu_agent_node)
     graph_builder.add_node("menu_tools_node", menu_tools_node)
     graph_builder.add_node("order_agent_node", order_agent_node)
-    graph_builder.add_node("order_tool_node", order_tools_node)
+    graph_builder.add_node("order_tools_node", order_tools_node)
     graph_builder.add_node("synthesizer_node", synthesizer_node)
 
     # Add edges
@@ -62,6 +62,12 @@ def build_graph():
     )
     graph_builder.add_edge("menu_tools_node", "menu_agent_node")
 
+    graph_builder.add_conditional_edges(
+        "order_agent_node",
+        should_continue_order,
+        {"order_tools_node": "order_tools_node", "synthesizer_node": "synthesizer_node"},
+    )
+    graph_builder.add_edge("order_tools_node", "order_agent_node")
     
 
     graph_builder.add_edge("synthesizer_node", END)

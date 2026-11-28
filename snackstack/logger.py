@@ -18,4 +18,5 @@ def setup_logger(name: str, level: int = logging.INFO) -> logging.Logger:
         logger.addHandler(handler)
 
     logger.setLevel(level)
+    # logger.disabled = True
     return logger

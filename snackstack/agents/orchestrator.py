@@ -11,7 +11,7 @@ from langgraph.graph import END
 from snackstack.config import llm
 from snackstack.logger import setup_logger
 from snackstack.state import StackState
-from snackstack.agents.prompts import ORCHESTRATOR_PROMPT_A
+from snackstack.agents.prompts import ORCHESTRATOR_PROMPT, ORCHESTRATOR_PROMPT_A
 from snackstack.agents.decision_schema import OrchestratorDecisionSchema
 
 
@@ -20,10 +20,11 @@ logger=setup_logger('snackstack:orchestrator')
 class OrchestratorDecision(BaseModel):
     """The orchestrator's routing decision."""
     reasoning:str = Field(description="Brief explanation of why this agent chosen")
-    agents: list[Literal["menu_agent"]] = Field(
-        description="Agent to dispatch. Use an empty list when the query "
-            "is not appropriate for SnackStack."
+    agents: list[Literal["menu_agent", "order_agent"]] = Field(
+        description="List of agents to dispatch. Always at least one.",
+        min_length=1,
     )
+
 
 routing_llm = llm.with_structured_output(OrchestratorDecision)
 def orchestrator_node(state: StackState)->Command[Literal["menu_agent_node"]]:
@@ -36,7 +37,7 @@ def orchestrator_node(state: StackState)->Command[Literal["menu_agent_node"]]:
     history = state.get("messages", [])[-6:]
 
     decision: OrchestratorDecision = routing_llm.invoke([
-        SystemMessage(content=ORCHESTRATOR_PROMPT_A),
+        SystemMessage(content=ORCHESTRATOR_PROMPT),
         *history,
         HumanMessage(content=query),
     ])
@@ -69,7 +70,7 @@ def orchestrator_node(state: StackState)->Command[Literal["menu_agent_node"]]:
             goto=sends, update={
             "route": decision.agents
         })
-   
+
 
 routing_llm_by_schema = llm.with_structured_output(OrchestratorDecisionSchema)
 def orchestrator_node_schema(state: StackState)->Command[Literal["menu_agent_node"]]:

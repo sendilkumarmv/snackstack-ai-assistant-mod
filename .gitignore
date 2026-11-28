@@ -222,3 +222,9 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 uv.lock
+.vs/slnx.sqlite
+.vs/VSWorkspaceState.json
+.vs/snackstack-ai-assistant-mod/FileContentIndex/44f9897e-89d2-4047-86e3-817328b99981.vsidx
+.vs/snackstack-ai-assistant-mod/FileContentIndex/67616db5-b991-4eb5-aadd-b7022d014595.vsidx
+.vs/snackstack-ai-assistant-mod/v18/.wsuo
+.vs/snackstack-ai-assistant-mod/v18/DocumentLayout.json

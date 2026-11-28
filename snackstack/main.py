@@ -65,8 +65,8 @@ class SnackStackAssistant:
 
         answer = result.get("final_answer", "Sorry, I could not process your request.")
 
-        # if self.speaker:
-        #     self.speaker.speak(answer)
+        if self.speaker:
+            self.speaker.speak(answer)
 
         return answer
 
@@ -92,8 +92,12 @@ def run_text_loop(assistant: SnackStackAssistant):
 
         answer = assistant.ask(query)
         logger.info("SnackStack: %s", answer)
+        # print(answer)
 
     logger.info("Goodbye — stay healthy!")
+
+def run_voice_loop(assistant: SnackStackAssistant):
+    pass
 
 
 def main():
@@ -106,11 +110,10 @@ def main():
     speak = args.voice or args.voice_out
     assistant = SnackStackAssistant(voice=args.tts_voice, speak=speak)
 
-    # if args.voice:
-    #     run_voice_loop(assistant)
-    # else:
-    
-    run_text_loop(assistant)
+    if args.voice:
+        run_voice_loop(assistant)
+    else:
+        run_text_loop(assistant)
     
 
 if __name__ == "__main__":
